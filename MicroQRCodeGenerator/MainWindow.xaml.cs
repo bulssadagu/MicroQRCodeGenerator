@@ -124,17 +124,15 @@ namespace MicroQRCodeGenerator
                     return;
                 }
 
-                var folderDialog = new Microsoft.Win32.SaveFileDialog
+                var folderDialog = new OpenFolderDialog
                 {
-                    Title = "저장 폴더 선택",
-                    Filter = "폴더|.",
-                    DefaultExt = "."
+                    Title = "QR 코드를 저장할 폴더를 선택해주세요."
                 };
 
                 if (folderDialog.ShowDialog() != true)
                     return;
 
-                string outputDirectory = System.IO.Path.GetDirectoryName(folderDialog.FileName);
+                string outputDirectory = folderDialog.FolderName;
                 
                 GenerateBatchButton.IsEnabled = false;
                 ProgressBar.Value = 0;

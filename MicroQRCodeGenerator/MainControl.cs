@@ -82,28 +82,36 @@ namespace MicroQRCodeGenerator
             }
 
             var results = new List<(string, byte[])>();
-            var lines = csvContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
 
             await Task.Run(() =>
             {
+                // 줄 바꿈으로 먼저 split
+                var lines = csvContent.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.RemoveEmptyEntries);
+
                 foreach (var line in lines)
                 {
                     var trimmedLine = line.Trim();
                     if (string.IsNullOrWhiteSpace(trimmedLine))
                         continue;
 
-                    try
+                    // comma로 split하여 각 값 처리
+                    var codes = trimmedLine.Split(',');
+                    
+                    foreach (var codeItem in codes)
                     {
-                        var code = trimmedLine.Split(',')[0].Trim();
+                        var code = codeItem.Trim();
                         if (!string.IsNullOrWhiteSpace(code))
                         {
-                            byte[] qrCode = GenerateQRCode(code);
-                            results.Add((code, qrCode));
+                            try
+                            {
+                                byte[] qrCode = GenerateQRCode(code);
+                                results.Add((code, qrCode));
+                            }
+                            catch
+                            {
+                                // Skip invalid codes
+                            }
                         }
-                    }
-                    catch
-                    {
-                        // Skip invalid lines
                     }
                 }
             });
