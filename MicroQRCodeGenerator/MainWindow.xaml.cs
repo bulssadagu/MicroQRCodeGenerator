@@ -22,7 +22,8 @@ namespace MicroQRCodeGenerator
     public partial class MainWindow : Window
     {
         private MainControl mainControl;
-        private byte[] currentQRCodeBytes;
+        private byte[]? currentQRCodeBytes;
+        private string? currentQRCodeData;
 
         public MainWindow()
         {
@@ -46,6 +47,7 @@ namespace MicroQRCodeGenerator
 
                 byte[] qrCodeBytes = mainControl.GenerateQRCode(qrCodeData);
                 currentQRCodeBytes = qrCodeBytes;
+                currentQRCodeData = qrCodeData;
                 
                 var bitmap = new BitmapImage();
                 bitmap.BeginInit();
@@ -74,14 +76,17 @@ namespace MicroQRCodeGenerator
 
                 var saveDialog = new SaveFileDialog
                 {
-                    Filter = "PNG 이미지|*.png",
+                    Filter = "PNG 이미지|*.png|SVG 벡터 이미지|*.svg",
                     DefaultExt = ".png",
                     FileName = $"QR_{QRCodeInput.Text}.png"
                 };
 
                 if (saveDialog.ShowDialog() == true)
                 {
-                    mainControl.SaveQRCode(currentQRCodeBytes, saveDialog.FileName);
+                    if (string.Equals(System.IO.Path.GetExtension(saveDialog.FileName), ".svg", StringComparison.OrdinalIgnoreCase))
+                        mainControl.SaveQRCodeSvg(currentQRCodeData!, saveDialog.FileName);
+                    else
+                        mainControl.SaveQRCode(currentQRCodeBytes, saveDialog.FileName);
                     MessageBox.Show($"QR 코드가 저장되었습니다.\n{saveDialog.FileName}", "저장 완료", MessageBoxButton.OK, MessageBoxImage.Information);
                 }
             }
@@ -148,7 +153,8 @@ namespace MicroQRCodeGenerator
                 }
 
                 StatusText.Text = $"{qrCodes.Count}개의 QR 코드를 저장 중입니다...";
-                await mainControl.SaveMultipleQRCodes(qrCodes, outputDirectory);
+                string selectedFormat = ((ComboBoxItem)BatchFormatComboBox.SelectedItem).Content.ToString() ?? "PNG";
+                await mainControl.SaveMultipleQRCodes(qrCodes, outputDirectory, selectedFormat);
 
                 ProgressBar.Value = 100;
                 StatusText.Text = $"완료! {qrCodes.Count}개의 QR 코드가 '{outputDirectory}'에 저장되었습니다.";

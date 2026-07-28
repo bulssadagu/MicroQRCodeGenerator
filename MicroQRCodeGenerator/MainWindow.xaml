@@ -124,12 +124,18 @@
                         <Grid Margin="0,0,0,20">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="110"/>
                                 <ColumnDefinition Width="150"/>
                                 <ColumnDefinition Width="150"/>
                             </Grid.ColumnDefinitions>
 
+                            <ComboBox Name="BatchFormatComboBox" Grid.Column="1" Height="40" Padding="10,7" VerticalContentAlignment="Center" SelectedIndex="0">
+                                <ComboBoxItem Content="PNG"/>
+                                <ComboBoxItem Content="SVG"/>
+                            </ComboBox>
+
                             <Button Name="LoadCsvButton" 
-                                    Grid.Column="1"
+                                    Grid.Column="2"
                                     Content="CSV 파일 열기" 
                                     Click="LoadCsvButton_Click" 
                                     Margin="10,0,0,0"
@@ -142,7 +148,7 @@
                                     Style="{StaticResource {x:Type Button}}"/>
 
                             <Button Name="GenerateBatchButton" 
-                                    Grid.Column="2"
+                                    Grid.Column="3"
                                     Content="일괄 생성 및 저장" 
                                     Click="GenerateBatchButton_Click" 
                                     Margin="10,0,0,0"

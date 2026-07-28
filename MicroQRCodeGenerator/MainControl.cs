@@ -53,6 +53,14 @@ namespace MicroQRCodeGenerator
             return pngBytes;
         }
 
+        public string GenerateQRCodeSvg(string data)
+        {
+            if (string.IsNullOrWhiteSpace(data)) throw new ArgumentException("QR 코드 데이터가 비어있습니다.", nameof(data));
+            using var qrCodeData = QRCodeGenerator.GenerateMicroQrCode(data, QRCodeGenerator.ECCLevel.M, requestedVersion: -2);
+            using var qrCode = new SvgQRCode(qrCodeData);
+            return qrCode.GetGraphic(pixelsPerModule: 20);
+        }
+
         public void SaveQRCode(byte[] qrCodeBytes, string filePath)
         {
             if (qrCodeBytes == null || qrCodeBytes.Length == 0)
@@ -65,13 +73,21 @@ namespace MicroQRCodeGenerator
                 throw new ArgumentException("파일 경로가 비어있습니다.", nameof(filePath));
             }
 
-            string directory = Path.GetDirectoryName(filePath);
-            if (!Directory.Exists(directory))
+            string? directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
                 Directory.CreateDirectory(directory);
             }
 
             File.WriteAllBytes(filePath, qrCodeBytes);
+        }
+
+        public void SaveQRCodeSvg(string data, string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException("파일 경로가 비어있습니다.", nameof(filePath));
+            string? directory = Path.GetDirectoryName(filePath);
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) Directory.CreateDirectory(directory);
+            File.WriteAllText(filePath, GenerateQRCodeSvg(data), new UTF8Encoding(false));
         }
 
         public async Task<List<(string Code, byte[] QRCode)>> GenerateQRCodesFromCsv(string csvContent)
@@ -119,7 +135,7 @@ namespace MicroQRCodeGenerator
             return results;
         }
 
-        public async Task SaveMultipleQRCodes(List<(string Code, byte[] QRCode)> qrCodes, string outputDirectory)
+        public async Task SaveMultipleQRCodes(List<(string Code, byte[] QRCode)> qrCodes, string outputDirectory, string format = "PNG")
         {
             if (qrCodes == null || qrCodes.Count == 0)
             {
@@ -138,11 +154,13 @@ namespace MicroQRCodeGenerator
 
             await Task.Run(() =>
             {
+                bool saveAsSvg = string.Equals(format, "SVG", StringComparison.OrdinalIgnoreCase);
                 foreach (var (code, qrCodeBytes) in qrCodes)
                 {
-                    string fileName = $"QR_{code}.png";
+                    string fileName = $"QR_{code}.{(saveAsSvg ? "svg" : "png")}";
                     string filePath = Path.Combine(outputDirectory, fileName);
-                    SaveQRCode(qrCodeBytes, filePath);
+                    if (saveAsSvg) SaveQRCodeSvg(code, filePath);
+                    else SaveQRCode(qrCodeBytes, filePath);
                 }
             });
         }
